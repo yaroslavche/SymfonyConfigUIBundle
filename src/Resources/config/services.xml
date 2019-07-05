@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services
+        http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <!-- config service -->
+        <service id="yaroslavche_config_ui.service.config"
+                 class="Yaroslavche\ConfigUIBundle\Service\Config" public="true">
+            <argument id="$kernelProjectDir"/>
+        </service>
+        <service id="Yaroslavche\ConfigUIBundle\Service\Config"
+                 alias="yaroslavche_config_ui.service.config" public="false"/>
+
+        <!-- profiler data collector service -->
+        <service id="Yaroslavche\ConfigUIBundle\DataCollector\ConfigCollector" public="false">
+            <argument type="service" id="yaroslavche_config_ui.service.config"/>
+            <tag name="data_collector"
+                 template="@YaroslavcheConfigUI/data_collector.html.twig"
+                 id="yaroslavche_config_ui.data_collector.config"
+            />
+        </service>
+    </services>
+</container>

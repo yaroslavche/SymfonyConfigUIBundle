@@ -1,0 +1,33 @@
+{% extends '@WebProfiler/Profiler/layout.html.twig' %}
+
+{% block toolbar %}
+    {% set icon %}
+        <span class="icon"><img src="" alt="C"/></span>
+    {% endset %}
+
+    {% set text %}
+        <div class="sf-toolbar-info-piece">
+            Config UI
+        </div>
+    {% endset %}
+
+    {{ include('@WebProfiler/Profiler/toolbar_item.html.twig', { 'link': true }) }}
+{% endblock %}
+
+{% block head %}
+    {{- parent() -}}
+{% endblock %}
+
+{% block menu %}
+    <span class="label">
+        <span class="icon"><img src="" alt="C"/></span>
+        <strong>Config UI</strong>
+    </span>
+{% endblock %}
+
+{% block panel %}
+    Config UI
+    {%- for bundle in collector.bundles -%}
+        {{ bundle }}
+    {%- endfor -%}
+{% endblock %}
