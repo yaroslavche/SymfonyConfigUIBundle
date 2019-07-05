@@ -8,7 +8,7 @@
         <!-- config service -->
         <service id="yaroslavche_config_ui.service.config"
                  class="Yaroslavche\ConfigUIBundle\Service\Config" public="true">
-            <argument id="$kernelProjectDir"/>
+            <argument id="$kernelBundlesMetadata"/>
         </service>
         <service id="Yaroslavche\ConfigUIBundle\Service\Config"
                  alias="yaroslavche_config_ui.service.config" public="false"/>
