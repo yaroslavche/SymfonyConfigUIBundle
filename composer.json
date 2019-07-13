@@ -1,5 +1,6 @@
 {
   "name": "yaroslavche/config-ui-bundle",
+  "description": "Symfony 4 Configuration UI bundle",
   "type": "symfony-bundle",
   "license": "MIT",
   "authors": [
