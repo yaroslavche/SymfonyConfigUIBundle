@@ -3,7 +3,6 @@
 namespace Yaroslavche\ConfigUIBundle\Service;
 
 use Closure;
-use Exception;
 use LogicException;
 use ReflectionClass;
 use ReflectionException;
@@ -19,6 +18,7 @@ use Symfony\Component\Config\Definition\Builder\VariableNodeDefinition;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\NodeInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Yaroslavche\ConfigUIBundle\Exception\BundleNotFoundException;
 
 class Config
 {
@@ -32,25 +32,23 @@ class Config
 
     /**
      * Config constructor.
-     * @param array $kernelBundlesMetadata
-     * @param array $definitionFields
+     * @param array[] $kernelBundlesMetadata
+     * @param bool[] $definitionFields
      */
-    public function __construct(
-        array $kernelBundlesMetadata,
-        array $definitionFields
-    ) {
+    public function __construct(array $kernelBundlesMetadata, array $definitionFields)
+    {
 //        $this->filesystem = new Filesystem();
         $this->definitionFields = $definitionFields;
         foreach ($kernelBundlesMetadata as $name => $metadata) {
-            $path = $metadata['path'] ?? false;
-            $namespace = $metadata['namespace'] ?? false;
-            if (!$path || !$namespace) {
+            $namespace = $metadata['namespace'];
+            if (empty($namespace)) {
                 throw new LogicException('Missed expected bundle metadata');
             }
             $this->bundles[$name] = array_merge(
                 $metadata,
                 [
-                    'treeBuilder' => null
+                    'treeBuilder' => null,
+                    'tree' => null,
                 ]
             );
         }
@@ -61,12 +59,11 @@ class Config
      * @param string $name
      * @return TreeBuilder
      * @throws ReflectionException
-     * @throws Exception
      */
     private function getBundleConfigTreeBuilder(string $name): TreeBuilder
     {
         if (!array_key_exists($name, $this->bundles)) {
-            throw new Exception(sprintf('Bundle with name %s not found', $name));
+            throw new BundleNotFoundException(sprintf('Bundle with name %s not found', $name));
         }
         $bundle = $this->bundles[$name];
         if ($bundle['treeBuilder'] instanceof TreeBuilder) {
@@ -87,16 +84,12 @@ class Config
 
     /**
      * @param string $name
-     * @return array
+     * @return array[]
+     * @throws ReflectionException
      */
     public function getBundleConfigDefinitions(string $name): array
     {
-        try {
-            $treeBuilder = $this->getBundleConfigTreeBuilder($name);
-        } catch (Exception $exception) {
-            dump($exception);
-            return [];
-        }
+        $treeBuilder = $this->getBundleConfigTreeBuilder($name);
         /** @var NodeInterface $tree */
         $tree = $this->bundles[$name]['tree'];
         /** @var ArrayNodeDefinition $rootNode */
@@ -110,7 +103,11 @@ class Config
         return [$tree->getName() => $definitions];
     }
 
-    private function handleDefinition(NodeDefinition $definition)
+    /**
+     * @param NodeDefinition $definition
+     * @return array[]
+     */
+    private function handleDefinition(NodeDefinition $definition): array
     {
         $fields = [
             'name', 'normalization', 'validation', 'defaultValue', 'default', 'required', 'deprecationMessage',
@@ -173,6 +170,10 @@ class Config
         return $definitionDataArray;
     }
 
+    /**
+     * @param NodeDefinition $nodeDefinition
+     * @return string
+     */
     private function getType(NodeDefinition $nodeDefinition): string
     {
         switch (get_class($nodeDefinition)) {

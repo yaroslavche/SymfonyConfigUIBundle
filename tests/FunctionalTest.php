@@ -28,7 +28,14 @@ class FunctionalTest extends TestCase
 
     public function testSelf()
     {
-        $definitions = $this->configService->getBundleConfigDefinitions('YaroslavcheConfigUIBundle');
-        $this->assertArrayHasKey(YaroslavcheConfigUIExtension::EXTENSION_ALIAS, $definitions);
+        $config = $this->configService->getBundleConfigDefinitions('YaroslavcheConfigUIBundle');
+        $this->assertArrayHasKey(YaroslavcheConfigUIExtension::EXTENSION_ALIAS, $config);
+        $collectedDefinitionFields = $config[YaroslavcheConfigUIExtension::EXTENSION_ALIAS]['definition_fields'];
+        $definitionsFieldsConfig = $this->kernel->getBundleConfig()['definition_fields'];
+        foreach ($definitionsFieldsConfig as $field => $show) {
+            if ($show === true) {
+                $this->assertArrayHasKey($field, $collectedDefinitionFields);
+            }
+        }
     }
 }

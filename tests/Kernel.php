@@ -50,9 +50,9 @@ class Kernel extends SymfonyKernel
                     'addDefaultChildren' => false,
                     'nodeBuilder' => false,
                     'normalizeKeys' => false,
-                    'min' => true,
-                    'max' => true,
-                    'values' => true,
+                    'min' => false,
+                    'max' => false,
+                    'values' => false,
                     'type' => true,
                 ]
             ];
@@ -70,6 +70,14 @@ class Kernel extends SymfonyKernel
     public function getCacheDir()
     {
         return __DIR__ . '/cache/' . spl_object_hash($this);
+    }
+
+    /**
+     * @return array
+     */
+    public function getBundleConfig(): array
+    {
+        return $this->bundleConfig;
     }
 
     /**

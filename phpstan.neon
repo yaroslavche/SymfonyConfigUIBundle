@@ -4,3 +4,5 @@ parameters:
     excludes_analyse:
         - %currentWorkingDirectory%/benchmarks/*.php
         - %currentWorkingDirectory%/features/*.php
+    ignoreErrors:
+    - '#Cannot call method end\(\) on Symfony\\Component\\Config\\Definition\\Builder\\NodeParentInterface|null.#'
