@@ -41,6 +41,7 @@ class YaroslavcheConfigUIExtension extends Extension
 
         $definition = $container->getDefinition('yaroslavche_config_ui.service.config');
         $definition->setArgument('$kernelBundlesMetadata', $container->getParameter('kernel.bundles_metadata'));
+        $definition->setArgument('$definitionFields', $config['definition_fields']);
     }
 
     /**
@@ -50,6 +51,4 @@ class YaroslavcheConfigUIExtension extends Extension
     {
         return static::EXTENSION_ALIAS;
     }
-
-
 }

@@ -17,7 +17,7 @@ class Configuration implements ConfigurationInterface
         $rootNode = $treeBuilder->getRootNode();
         $rootNode
             ->children()
-                ->arrayNode('exclude')->prototype('scalar')->end()
+                ->arrayNode('definition_fields')->prototype('boolean')->end()
             ->end();
         return $treeBuilder;
     }

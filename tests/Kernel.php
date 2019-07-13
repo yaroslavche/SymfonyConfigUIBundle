@@ -20,7 +20,42 @@ class Kernel extends SymfonyKernel
 
     public function __construct(?array $bundleConfig = null)
     {
-        $this->bundleConfig = $bundleConfig ?? [];
+        $this->bundleConfig = $bundleConfig ?? [
+                'definition_fields' => [
+                    'name' => true,
+                    'normalization' => false,
+                    'validation' => false,
+                    'defaultValue' => true,
+                    'default' => true,
+                    'required' => true,
+                    'deprecationMessage' => true,
+                    'merge' => false,
+                    'allowEmptyValue' => true,
+                    'nullEquivalent' => false,
+                    'trueEquivalent' => false,
+                    'falseEquivalent' => false,
+                    'pathSeparator' => false,
+                    'parent' => false,
+                    'attributes' => true,
+                    'performDeepMerging' => false,
+                    'ignoreExtraKeys' => false,
+                    'removeExtraKeys' => false,
+                    'children' => true,
+                    'prototype' => true,
+                    'atLeastOne' => true,
+                    'allowNewKeys' => false,
+                    'key' => false,
+                    'removeKeyItem' => false,
+                    'addDefaults' => false,
+                    'addDefaultChildren' => false,
+                    'nodeBuilder' => false,
+                    'normalizeKeys' => false,
+                    'min' => true,
+                    'max' => true,
+                    'values' => true,
+                    'type' => true,
+                ]
+            ];
         parent::__construct('test', true);
     }
 

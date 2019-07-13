@@ -3,3 +3,7 @@
 /composer.lock
 /phpunit.xml
 /tests/cache/
+.phpunit.result.cache
+.php_cs.cache
+clover.xml
+infection.log

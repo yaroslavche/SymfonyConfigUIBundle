@@ -14,5 +14,4 @@ class YaroslavcheConfigUIBundle extends Bundle
 
         return $this->extension;
     }
-
 }

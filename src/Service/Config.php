@@ -13,7 +13,6 @@ use Symfony\Component\Config\Definition\Builder\EnumNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\FloatNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\IntegerNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
-use Symfony\Component\Config\Definition\Builder\NumericNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\ScalarNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\Builder\VariableNodeDefinition;
@@ -28,12 +27,20 @@ class Config
     private $filesystem;
     /** @var array $bundles */
     private $bundles;
+    /** @var array[string => bool] $definitionFields */
+    private $definitionFields;
 
+    /**
+     * Config constructor.
+     * @param array $kernelBundlesMetadata
+     * @param array $definitionFields
+     */
     public function __construct(
-        array $kernelBundlesMetadata
-    )
-    {
-        $this->filesystem = new Filesystem();
+        array $kernelBundlesMetadata,
+        array $definitionFields
+    ) {
+//        $this->filesystem = new Filesystem();
+        $this->definitionFields = $definitionFields;
         foreach ($kernelBundlesMetadata as $name => $metadata) {
             $path = $metadata['path'] ?? false;
             $namespace = $metadata['namespace'] ?? false;
@@ -47,13 +54,6 @@ class Config
                 ]
             );
         }
-        dump(
-            $this->getBundleConfigArray('FrameworkBundle'),
-            $this->getBundleConfigArray('MakerBundle'),
-            $this->getBundleConfigArray('TwigBundle'),
-            $this->getBundleConfigArray('WebProfilerBundle'),
-            $this->getBundleConfigArray('YaroslavcheConfigUIBundle')
-        );
     }
 
 
@@ -85,7 +85,11 @@ class Config
         return $treeBuilder;
     }
 
-    public function getBundleConfigArray(string $name): array
+    /**
+     * @param string $name
+     * @return array
+     */
+    public function getBundleConfigDefinitions(string $name): array
     {
         try {
             $treeBuilder = $this->getBundleConfigTreeBuilder($name);
@@ -103,149 +107,91 @@ class Config
             $definitions[$childName] = $this->handleDefinition($childDefinition);
         }
 
-        $defaults = [];
-        /** @todo BAD, WRONG */
-        foreach ($definitions as $name => $definition) {
-            $defaults[$name] = $definition['defaultValue'];
-            foreach ($definition['children'] ?? [] as $childName => $childDefinition) {
-                $defaults[$name][$childName] = $childDefinition['defaultValue'];
-            }
-        }
-        return [$tree->getName() => $defaults];
+        return [$tree->getName() => $definitions];
     }
 
-    /**
-     * @todo
-     * @param NodeDefinition $definition
-     * @return array|null
-     */
-    private
-    function handleDefinition(NodeDefinition $definition)
+    private function handleDefinition(NodeDefinition $definition)
     {
-        $definitionFQCN = get_class($definition);
-        $definitionClosure = null;
-        switch ($definitionFQCN) {
+        $fields = [
+            'name', 'normalization', 'validation', 'defaultValue', 'default', 'required', 'deprecationMessage',
+            'merge', 'allowEmptyValue', 'nullEquivalent', 'trueEquivalent', 'falseEquivalent', 'pathSeparator',
+            'parent', 'attributes'
+        ];
+        switch (get_class($definition)) {
+            case VariableNodeDefinition::class:
             case ScalarNodeDefinition::class:
             case BooleanNodeDefinition::class:
-            case VariableNodeDefinition::class:
-                $definitionClosure = function (NodeDefinition $nodeDefinition) {
-                    return
-                        [
-                            'name' => $nodeDefinition->name,
-                            'normalization' => $nodeDefinition->normalization,
-                            'validation' => $nodeDefinition->validation,
-                            'defaultValue' => $nodeDefinition->defaultValue,
-                            'default' => $nodeDefinition->default,
-                            'required' => $nodeDefinition->required,
-                            'deprecationMessage' => $nodeDefinition->deprecationMessage,
-                            'merge' => $nodeDefinition->merge,
-                            'allowEmptyValue' => $nodeDefinition->allowEmptyValue,
-                            'nullEquivalent' => $nodeDefinition->nullEquivalent,
-                            'trueEquivalent' => $nodeDefinition->trueEquivalent,
-                            'falseEquivalent' => $nodeDefinition->falseEquivalent,
-                            'pathSeparator' => $nodeDefinition->pathSeparator,
-                            'parent' => $nodeDefinition->parent,
-                            'attributes' => $nodeDefinition->attributes,
-                        ];
-                };
                 break;
             case ArrayNodeDefinition::class:
-                $definitionClosure = function (ArrayNodeDefinition $nodeDefinition) {
-                    return
-                        [
-                            'performDeepMerging' => $nodeDefinition->performDeepMerging,
-                            'ignoreExtraKeys' => $nodeDefinition->ignoreExtraKeys,
-                            'removeExtraKeys' => $nodeDefinition->removeExtraKeys,
-                            'children' => $nodeDefinition->children,
-                            'prototype' => $nodeDefinition->prototype,
-                            'atLeastOne' => $nodeDefinition->atLeastOne,
-                            'allowNewKeys' => $nodeDefinition->allowNewKeys,
-                            'key' => $nodeDefinition->key,
-                            'removeKeyItem' => $nodeDefinition->removeKeyItem,
-                            'addDefaults' => $nodeDefinition->addDefaults,
-                            'addDefaultChildren' => $nodeDefinition->addDefaultChildren,
-                            'nodeBuilder' => $nodeDefinition->nodeBuilder,
-                            'normalizeKeys' => $nodeDefinition->normalizeKeys,
-                            'name' => $nodeDefinition->name,
-                            'normalization' => $nodeDefinition->normalization,
-                            'validation' => $nodeDefinition->validation,
-                            'defaultValue' => $nodeDefinition->defaultValue,
-                            'default' => $nodeDefinition->default,
-                            'required' => $nodeDefinition->required,
-                            'deprecationMessage' => $nodeDefinition->deprecationMessage,
-                            'merge' => $nodeDefinition->merge,
-                            'allowEmptyValue' => $nodeDefinition->allowEmptyValue,
-                            'nullEquivalent' => $nodeDefinition->nullEquivalent,
-                            'trueEquivalent' => $nodeDefinition->trueEquivalent,
-                            'falseEquivalent' => $nodeDefinition->falseEquivalent,
-                            'pathSeparator' => $nodeDefinition->pathSeparator,
-                            'parent' => $nodeDefinition->parent,
-                            'attributes' => $nodeDefinition->attributes
-                        ];
-                };
+                $fields = array_merge(
+                    [
+                        'performDeepMerging', 'ignoreExtraKeys', 'removeExtraKeys', 'children', 'prototype',
+                        'atLeastOne', 'allowNewKeys', 'key', 'removeKeyItem', 'addDefaults', 'addDefaultChildren',
+                        'nodeBuilder', 'normalizeKeys'
+                    ],
+                    $fields
+                );
                 break;
             case IntegerNodeDefinition::class:
             case FloatNodeDefinition::class:
-                $definitionClosure = function (NumericNodeDefinition $nodeDefinition) {
-                    return
-                        [
-                            'min' => $nodeDefinition->min,
-                            'max' => $nodeDefinition->max,
-                            'name' => $nodeDefinition->name,
-                            'normalization' => $nodeDefinition->normalization,
-                            'validation' => $nodeDefinition->validation,
-                            'defaultValue' => $nodeDefinition->defaultValue,
-                            'default' => $nodeDefinition->default,
-                            'required' => $nodeDefinition->required,
-                            'deprecationMessage' => $nodeDefinition->deprecationMessage,
-                            'merge' => $nodeDefinition->merge,
-                            'allowEmptyValue' => $nodeDefinition->allowEmptyValue,
-                            'nullEquivalent' => $nodeDefinition->nullEquivalent,
-                            'trueEquivalent' => $nodeDefinition->trueEquivalent,
-                            'falseEquivalent' => $nodeDefinition->falseEquivalent,
-                            'pathSeparator' => $nodeDefinition->pathSeparator,
-                            'parent' => $nodeDefinition->parent,
-                            'attributes' => $nodeDefinition->attributes,
-                        ];
-                };
+                $fields = array_merge(
+                    [
+                        'min', 'max'
+                    ],
+                    $fields
+                );
                 break;
             case EnumNodeDefinition::class:
-                $definitionClosure = function (EnumNodeDefinition $nodeDefinition) {
-                    return
-                        [
-                            'values' => $nodeDefinition->values,
-                            'name' => $nodeDefinition->name,
-                            'normalization' => $nodeDefinition->normalization,
-                            'validation' => $nodeDefinition->validation,
-                            'defaultValue' => $nodeDefinition->defaultValue,
-                            'default' => $nodeDefinition->default,
-                            'required' => $nodeDefinition->required,
-                            'deprecationMessage' => $nodeDefinition->deprecationMessage,
-                            'merge' => $nodeDefinition->merge,
-                            'allowEmptyValue' => $nodeDefinition->allowEmptyValue,
-                            'nullEquivalent' => $nodeDefinition->nullEquivalent,
-                            'trueEquivalent' => $nodeDefinition->trueEquivalent,
-                            'falseEquivalent' => $nodeDefinition->falseEquivalent,
-                            'pathSeparator' => $nodeDefinition->pathSeparator,
-                            'parent' => $nodeDefinition->parent,
-                            'attributes' => $nodeDefinition->attributes,
-                        ];
-                };
+                $fields = array_merge(
+                    [
+                        'values'
+                    ],
+                    $fields
+                );
                 break;
             default:
-                dump(sprintf('TODO: Implement handle %s', $definitionFQCN));
+                /** @todo check if NodeDefinition, then warn */
         }
-        if ($definitionClosure instanceof Closure) {
-            $definitionClosure = Closure::bind($definitionClosure, null, $definition);
-            $definitionDataArray = $definitionClosure($definition);
-            if ($definition instanceof ArrayNodeDefinition) {
-                foreach ($definitionDataArray['children'] ?? [] as $name => $childDefinition) {
-                    $definitionDataArray['children'][$name] = $this->handleDefinition($childDefinition);
-                }
+        $definitionClosure = function (NodeDefinition $nodeDefinition, array $fields) {
+            $definition = [];
+            foreach ($fields as $key => $field) {
+                $definition[$field] = $nodeDefinition->{$field};
             }
-            return $definitionDataArray;
+            return $definition;
+        };
+        $definitionClosure = Closure::bind($definitionClosure, null, $definition);
+        $definitionDataArray = $definitionClosure($definition, $fields);
+        $definitionDataArray['type'] = $this->getType($definition);
+        foreach ($definitionDataArray as $field => $data) {
+            if ($this->definitionFields[$field] === false) {
+                unset($definitionDataArray[$field]);
+            }
         }
-        return null;
+        foreach ($definitionDataArray['children'] ?? [] as $name => $childDefinition) {
+            $definitionDataArray['children'][$name] = $this->handleDefinition($childDefinition);
+        }
+        return $definitionDataArray;
     }
 
+    private function getType(NodeDefinition $nodeDefinition): string
+    {
+        switch (get_class($nodeDefinition)) {
+            case VariableNodeDefinition::class:
+                return 'variable';
+            case ScalarNodeDefinition::class:
+                return 'scalar';
+            case BooleanNodeDefinition::class:
+                return 'boolean';
+            case ArrayNodeDefinition::class:
+                return 'array';
+            case IntegerNodeDefinition::class:
+                return 'integer';
+            case FloatNodeDefinition::class:
+                return 'float';
+            case EnumNodeDefinition::class:
+                return 'enum';
+            default:
+                /** @todo check if NodeDefinition, then warn */
+        }
+    }
 }

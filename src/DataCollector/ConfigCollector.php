@@ -54,7 +54,10 @@ class ConfigCollector extends DataCollector
         $this->data = [];
     }
 
-    public function getBundles()
+    /**
+     * @return string[]
+     */
+    public function getBundles(): array
     {
         return $this->data['bundles'];
     }
