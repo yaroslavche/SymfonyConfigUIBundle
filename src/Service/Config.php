@@ -2,24 +2,23 @@
 
 namespace Yaroslavche\ConfigUIBundle\Service;
 
+use Closure;
+use Exception;
 use LogicException;
-use PhpParser\Error;
-use PhpParser\Node;
-use PhpParser\Node\Expr\Array_;
-use PhpParser\Node\Expr\Assign;
-use PhpParser\Node\Expr\MethodCall;
-use PhpParser\Node\Expr\New_;
-use PhpParser\Node\Expr\Variable;
-use PhpParser\Node\Identifier;
-use PhpParser\Node\Scalar\String_;
-use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitorAbstract;
-use PhpParser\ParserFactory;
 use ReflectionClass;
 use ReflectionException;
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\BooleanNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\EnumNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\FloatNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\IntegerNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\NodeDefinition;
+use Symfony\Component\Config\Definition\Builder\NumericNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\ScalarNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
+use Symfony\Component\Config\Definition\Builder\VariableNodeDefinition;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\NodeInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 class Config
@@ -27,6 +26,8 @@ class Config
 
     /** @var Filesystem $filesystem */
     private $filesystem;
+    /** @var array $bundles */
+    private $bundles;
 
     public function __construct(
         array $kernelBundlesMetadata
@@ -34,146 +35,217 @@ class Config
     {
         $this->filesystem = new Filesystem();
         foreach ($kernelBundlesMetadata as $name => $metadata) {
-            /** @var string $path */
             $path = $metadata['path'] ?? false;
             $namespace = $metadata['namespace'] ?? false;
             if (!$path || !$namespace) {
                 throw new LogicException('Missed expected bundle metadata');
             }
-            /** @var TreeBuilder $bundleConfigTreeBuilder */
-            $bundleConfigTreeBuilder = $this->getBundleConfigTreeBuilder($namespace);
-            dump($bundleConfigTreeBuilder->buildTree());
-//            $this->parseBundleConfiguration($path);
+            $this->bundles[$name] = array_merge(
+                $metadata,
+                [
+                    'treeBuilder' => null
+                ]
+            );
         }
+        dump(
+            $this->getBundleConfigArray('FrameworkBundle'),
+            $this->getBundleConfigArray('MakerBundle'),
+            $this->getBundleConfigArray('TwigBundle'),
+            $this->getBundleConfigArray('WebProfilerBundle'),
+            $this->getBundleConfigArray('YaroslavcheConfigUIBundle')
+        );
     }
 
-    private function parseBundleConfiguration($path)
-    {
-        $configurationClassPath = sprintf('%s%sDependencyInjection%sConfiguration.php', $path, DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR);
-        if (!$this->filesystem->exists($configurationClassPath)) {
-            throw new LogicException('Missed expected bundle configuration class');
-        }
-        $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
-        try {
-            $configurationClass = file_get_contents($configurationClassPath);
-            $ast = $parser->parse($configurationClass);
-        } catch (Error $error) {
-            throw new LogicException($error->getMessage());
-        }
-        $traverser = new NodeTraverser();
-        $getConfigTreeBuilderNodeVisitor = new GetConfigTreeBuilderNodeVisitor();
-        $traverser->addVisitor($getConfigTreeBuilderNodeVisitor);
-        $traverser->traverse($ast);
-        $configArray = $getConfigTreeBuilderNodeVisitor->getConfigArray();
-    }
 
     /**
-     * @param string $namespace
+     * @param string $name
      * @return TreeBuilder
      * @throws ReflectionException
+     * @throws Exception
      */
-    private function getBundleConfigTreeBuilder(string $namespace): TreeBuilder
+    private function getBundleConfigTreeBuilder(string $name): TreeBuilder
     {
-        $configurationFQCN = sprintf('%s\DependencyInjection\Configuration', $namespace);
+        if (!array_key_exists($name, $this->bundles)) {
+            throw new Exception(sprintf('Bundle with name %s not found', $name));
+        }
+        $bundle = $this->bundles[$name];
+        if ($bundle['treeBuilder'] instanceof TreeBuilder) {
+            return $bundle['treeBuilder'];
+        }
+        $configurationFQCN = sprintf('%s\DependencyInjection\Configuration', $bundle['namespace']);
         $configuration = new ReflectionClass($configurationFQCN);
 
         /** @var ConfigurationInterface $configurationInstance */
         $configurationInstance = new $configurationFQCN(false);
         /** @var TreeBuilder $treeBuilder */
         $treeBuilder = $configuration->getMethod('getConfigTreeBuilder')->invoke($configurationInstance);
+        $this->bundles[$name]['treeBuilder'] = $treeBuilder;
+        $this->bundles[$name]['tree'] = $treeBuilder->buildTree();
 
         return $treeBuilder;
     }
 
-}
-
-class GetConfigTreeBuilderNodeVisitor extends NodeVisitorAbstract
-{
-    /** @var bool $inScope */
-    private $inScope = false;
-    /** @var Node[] */
-    private $nodes = [];
-    /** @var Node[] $variables */
-    private $variables = [];
-    /** @var Node[] $identifiers */
-    private $identifiers = [];
-    /** @var Node|null $treeBuilderVariable */
-    private $treeBuilderVariable = null;
-    /** @var string $treeBuilderName */
-    private $treeBuilderName = '';
-
-    public function enterNode(Node $node)
+    public function getBundleConfigArray(string $name): array
     {
-        if ($this->inScope) {
-            $this->check($node);
+        try {
+            $treeBuilder = $this->getBundleConfigTreeBuilder($name);
+        } catch (Exception $exception) {
+            dump($exception);
+            return [];
         }
-        if ($node instanceof ClassMethod) {
-            if ($node->name instanceof Identifier && $node->name->name === 'getConfigTreeBuilder') {
-                $this->inScope = true;
-            } else {
-                return NodeTraverser::DONT_TRAVERSE_CHILDREN;
+        /** @var NodeInterface $tree */
+        $tree = $this->bundles[$name]['tree'];
+        /** @var ArrayNodeDefinition $rootNode */
+        $rootNode = $treeBuilder->getRootNode();
+
+        $definitions = [];
+        foreach ($rootNode->getChildNodeDefinitions() as $childName => $childDefinition) {
+            $definitions[$childName] = $this->handleDefinition($childDefinition);
+        }
+
+        $defaults = [];
+        /** @todo BAD, WRONG */
+        foreach ($definitions as $name => $definition) {
+            $defaults[$name] = $definition['defaultValue'];
+            foreach ($definition['children'] ?? [] as $childName => $childDefinition) {
+                $defaults[$name][$childName] = $childDefinition['defaultValue'];
             }
         }
+        return [$tree->getName() => $defaults];
     }
 
-    public function leaveNode(Node $node)
+    /**
+     * @todo
+     * @param NodeDefinition $definition
+     * @return array|null
+     */
+    private
+    function handleDefinition(NodeDefinition $definition)
     {
-        if ($node instanceof ClassMethod) {
-            if ($node->name instanceof Identifier && $node->name->name === 'getConfigTreeBuilder') {
-                $this->inScope = false;
-            }
-        }
-    }
-
-    public function getConfigArray()
-    {
-        dump($this);
-    }
-
-    private function check(Node $node)
-    {
-        $nodeKey = sprintf('%s_%s', $node->getType(), uniqid());
-        $this->nodes[$nodeKey] = $node;
-        $nodeClassName = get_class($node);
-        switch ($nodeClassName) {
-            case Assign::class:
-                /** @var Assign $node */
-                $nodeExpr = $node->expr;
-                $nodeExprClassName = get_class($nodeExpr);
-                switch ($nodeExprClassName) {
-                    case New_::class:
-                        if (in_array('TreeBuilder', $nodeExpr->class->parts)) {
-                            $this->treeBuilderVariable = $node->var;
-                            $treeBuilderName = $nodeExpr->args[0]->value;
-                            if ($treeBuilderName instanceof String_) {
-                                $this->treeBuilderName = $treeBuilderName->value;
-                            } else {
-                                $this->treeBuilderName = 'fixme';
-                            }
-                        }
-                        break;
-                    case MethodCall::class:
-                        $methodName = $nodeExpr->name->name;
-                        dump($methodName);
-                        break;
-                    case Array_::class:
-                        break;
-                    case Variable::class:
-                        break;
-                    default:
-                        throw new \Exception($nodeExprClassName);
-                }
+        $definitionFQCN = get_class($definition);
+        $definitionClosure = null;
+        switch ($definitionFQCN) {
+            case ScalarNodeDefinition::class:
+            case BooleanNodeDefinition::class:
+            case VariableNodeDefinition::class:
+                $definitionClosure = function (NodeDefinition $nodeDefinition) {
+                    return
+                        [
+                            'name' => $nodeDefinition->name,
+                            'normalization' => $nodeDefinition->normalization,
+                            'validation' => $nodeDefinition->validation,
+                            'defaultValue' => $nodeDefinition->defaultValue,
+                            'default' => $nodeDefinition->default,
+                            'required' => $nodeDefinition->required,
+                            'deprecationMessage' => $nodeDefinition->deprecationMessage,
+                            'merge' => $nodeDefinition->merge,
+                            'allowEmptyValue' => $nodeDefinition->allowEmptyValue,
+                            'nullEquivalent' => $nodeDefinition->nullEquivalent,
+                            'trueEquivalent' => $nodeDefinition->trueEquivalent,
+                            'falseEquivalent' => $nodeDefinition->falseEquivalent,
+                            'pathSeparator' => $nodeDefinition->pathSeparator,
+                            'parent' => $nodeDefinition->parent,
+                            'attributes' => $nodeDefinition->attributes,
+                        ];
+                };
                 break;
-            case Identifier::class:
-                /** @var Identifier $node */
-                $this->variables[$node->name] = $node;
+            case ArrayNodeDefinition::class:
+                $definitionClosure = function (ArrayNodeDefinition $nodeDefinition) {
+                    return
+                        [
+                            'performDeepMerging' => $nodeDefinition->performDeepMerging,
+                            'ignoreExtraKeys' => $nodeDefinition->ignoreExtraKeys,
+                            'removeExtraKeys' => $nodeDefinition->removeExtraKeys,
+                            'children' => $nodeDefinition->children,
+                            'prototype' => $nodeDefinition->prototype,
+                            'atLeastOne' => $nodeDefinition->atLeastOne,
+                            'allowNewKeys' => $nodeDefinition->allowNewKeys,
+                            'key' => $nodeDefinition->key,
+                            'removeKeyItem' => $nodeDefinition->removeKeyItem,
+                            'addDefaults' => $nodeDefinition->addDefaults,
+                            'addDefaultChildren' => $nodeDefinition->addDefaultChildren,
+                            'nodeBuilder' => $nodeDefinition->nodeBuilder,
+                            'normalizeKeys' => $nodeDefinition->normalizeKeys,
+                            'name' => $nodeDefinition->name,
+                            'normalization' => $nodeDefinition->normalization,
+                            'validation' => $nodeDefinition->validation,
+                            'defaultValue' => $nodeDefinition->defaultValue,
+                            'default' => $nodeDefinition->default,
+                            'required' => $nodeDefinition->required,
+                            'deprecationMessage' => $nodeDefinition->deprecationMessage,
+                            'merge' => $nodeDefinition->merge,
+                            'allowEmptyValue' => $nodeDefinition->allowEmptyValue,
+                            'nullEquivalent' => $nodeDefinition->nullEquivalent,
+                            'trueEquivalent' => $nodeDefinition->trueEquivalent,
+                            'falseEquivalent' => $nodeDefinition->falseEquivalent,
+                            'pathSeparator' => $nodeDefinition->pathSeparator,
+                            'parent' => $nodeDefinition->parent,
+                            'attributes' => $nodeDefinition->attributes
+                        ];
+                };
                 break;
-            case Variable::class:
-                /** @var Variable $node */
-                $this->identifiers[$node->name] = $node;
+            case IntegerNodeDefinition::class:
+            case FloatNodeDefinition::class:
+                $definitionClosure = function (NumericNodeDefinition $nodeDefinition) {
+                    return
+                        [
+                            'min' => $nodeDefinition->min,
+                            'max' => $nodeDefinition->max,
+                            'name' => $nodeDefinition->name,
+                            'normalization' => $nodeDefinition->normalization,
+                            'validation' => $nodeDefinition->validation,
+                            'defaultValue' => $nodeDefinition->defaultValue,
+                            'default' => $nodeDefinition->default,
+                            'required' => $nodeDefinition->required,
+                            'deprecationMessage' => $nodeDefinition->deprecationMessage,
+                            'merge' => $nodeDefinition->merge,
+                            'allowEmptyValue' => $nodeDefinition->allowEmptyValue,
+                            'nullEquivalent' => $nodeDefinition->nullEquivalent,
+                            'trueEquivalent' => $nodeDefinition->trueEquivalent,
+                            'falseEquivalent' => $nodeDefinition->falseEquivalent,
+                            'pathSeparator' => $nodeDefinition->pathSeparator,
+                            'parent' => $nodeDefinition->parent,
+                            'attributes' => $nodeDefinition->attributes,
+                        ];
+                };
+                break;
+            case EnumNodeDefinition::class:
+                $definitionClosure = function (EnumNodeDefinition $nodeDefinition) {
+                    return
+                        [
+                            'values' => $nodeDefinition->values,
+                            'name' => $nodeDefinition->name,
+                            'normalization' => $nodeDefinition->normalization,
+                            'validation' => $nodeDefinition->validation,
+                            'defaultValue' => $nodeDefinition->defaultValue,
+                            'default' => $nodeDefinition->default,
+                            'required' => $nodeDefinition->required,
+                            'deprecationMessage' => $nodeDefinition->deprecationMessage,
+                            'merge' => $nodeDefinition->merge,
+                            'allowEmptyValue' => $nodeDefinition->allowEmptyValue,
+                            'nullEquivalent' => $nodeDefinition->nullEquivalent,
+                            'trueEquivalent' => $nodeDefinition->trueEquivalent,
+                            'falseEquivalent' => $nodeDefinition->falseEquivalent,
+                            'pathSeparator' => $nodeDefinition->pathSeparator,
+                            'parent' => $nodeDefinition->parent,
+                            'attributes' => $nodeDefinition->attributes,
+                        ];
+                };
                 break;
             default:
-                break;
+                dump(sprintf('TODO: Implement handle %s', $definitionFQCN));
         }
+        if ($definitionClosure instanceof Closure) {
+            $definitionClosure = Closure::bind($definitionClosure, null, $definition);
+            $definitionDataArray = $definitionClosure($definition);
+            if ($definition instanceof ArrayNodeDefinition) {
+                foreach ($definitionDataArray['children'] ?? [] as $name => $childDefinition) {
+                    $definitionDataArray['children'][$name] = $this->handleDefinition($childDefinition);
+                }
+            }
+            return $definitionDataArray;
+        }
+        return null;
     }
+
 }
