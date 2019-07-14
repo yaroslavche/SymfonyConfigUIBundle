@@ -13,15 +13,10 @@ matrix:
       env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER="max[self]=0"
     - php: 7.3
       env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER="max[self]=0"
-    - php: 7.4
-      env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER="max[self]=0" TEST_GROUP=canFail
-    - php: nightly
-      env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER="max[self]=0" TEST_GROUP=canFail
     - php: 7.3
       env: STABILITY="dev" TEST_GROUP=canFail
   allow_failures:
-    - env: TEST_GROUP=canFail
-    - php: nightly
+    - env: STABILITY="dev" TEST_GROUP=canFail
 before_install:
   - if ! [ -z "$STABILITY" ]; then composer config minimum-stability ${STABILITY}; fi;
   - if ! [ -v "$DEPENDENCIES" ]; then composer require --no-update ${DEPENDENCIES};
