@@ -195,4 +195,12 @@ class Config
                 /** @todo check if NodeDefinition, then warn */
         }
     }
+
+    /**
+     * @return array[]
+     */
+    public function getBundles(): array
+    {
+        return $this->bundles;
+    }
 }

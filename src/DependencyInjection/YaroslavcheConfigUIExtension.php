@@ -70,9 +70,9 @@ class YaroslavcheConfigUIExtension extends Extension
         $configuration = $this->getConfiguration($configs, $container);
         $config = $this->processConfiguration($configuration, $configs);
 
-        $definition = $container->getDefinition('yaroslavche_config_ui.service.config');
-        $definition->setArgument('$kernelBundlesMetadata', $kernelBundlesMetadata);
-        $definition->setArgument('$definitionFields', $config['definition_fields']);
+        $configServiceDefinition = $container->getDefinition('yaroslavche_config_ui.service.config');
+        $configServiceDefinition->setArgument('$kernelBundlesMetadata', $kernelBundlesMetadata);
+        $configServiceDefinition->setArgument('$definitionFields', $config['definition_fields']);
     }
 
     /**

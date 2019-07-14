@@ -14,6 +14,13 @@
         <service id="Yaroslavche\ConfigUIBundle\Service\Config"
                  alias="yaroslavche_config_ui.service.config" public="false"/>
 
+        <!-- controller -->
+        <service id="yaroslavche_config_ui.controller.dashboard"
+                 class="Yaroslavche\ConfigUIBundle\Controller\DashboardController" public="true">
+            <argument type="service" id="yaroslavche_config_ui.service.config"/>
+            <tag name="controller.service_arguments"/>
+        </service>
+
         <!-- profiler data collector service -->
         <service id="Yaroslavche\ConfigUIBundle\DataCollector\ConfigCollector" public="false">
             <argument type="service" id="yaroslavche_config_ui.service.config"/>
