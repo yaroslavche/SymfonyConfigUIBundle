@@ -2,3 +2,11 @@
 ```bash
 $ composer require yaroslavche/config-ui-bundle
 ```
+```yaml
+# config/routes/yaroslavche_config_ui.yaml
+yaroslavche_config_ui:
+    resource: "@YaroslavcheConfigUIBundle/Resources/config/routes.xml"
+    prefix: '/config'
+```
+
+`https://localhost:8000/config/dashboard`
