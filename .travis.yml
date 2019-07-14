@@ -3,29 +3,30 @@ sudo: false
 cache:
   directories:
     - "$HOME/.composer/cache/files"
-    - "$HOME/symfony-bridge/.phpunit"
 env:
   global:
-    - SYMFONY_PHPUNIT_DIR="$HOME/symfony-bridge/.phpunit"
     - secure: B34XCQxFkAV7BZktiP6vImsrRAXXYsi/lDHL1SABXUK7DEehqDORwjfwy815dIyboNrgB4nB/eO89ZKFmOFO1i9EAgBrraPrQhYhB5ZijGpWOMCIjcbgUYaICVf1R+KltF9hYnQMc5ziPxF8pjd1aiPmdnbfzrIBK2UL+gdGookfVpAlZpqqnmtoDl2A8Y7Q8VkY+FHP4pNB2rRx0qasANEqodKnbLVh60Hs4LxAJsIjtM+OdPI50QmpbwQJRFY0ACuphSM2arXvoi3lMHQqAUJ2Fu+kHcE/lgRFuM+sdNpHpL3aT3Ceg+LaUNhH5k/6faqaSUi7lH0tLwdPr6omVriAJ06xuEmQInPROqD68LpVIoRDbbYhq5Syh5olvTonXOHEUZt/LtlLU5MKVK1ItTW3TlWbjkiXQhydSGxyqrt2GNcQ471h8L+6szat7GIIF0su/wx2qMGntZ58bZWwzewC4f4jYS+v0rtPDGpRwfKzsVNIrip8qWAHkytHBWkdYZsCugX/8OwNrCwZQuDox+eWJ5dl0aMXGh96Bn3YjS69HQ4oWo481m77HjnU0NHmET9o4K0VJUT8EjzdfNrVc2F7AuwZ9LKJGz8bkOXlxqSFPrwpP3DJhoA+6fjHiBp2Lj/njYPTx0uiCJnH2iH8kwrA2JutFgIWrToeo+3mdMA=
 matrix:
   fast_finish: true
   include:
     - php: 7.2
       env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER="max[self]=0"
-    - php: 7.2
-      env: PHPUNIT_FLAGS="-v --coverage-text"
-    - php: 7.2
-      env: STABILITY="dev"
+    - php: 7.3
+      env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER="max[self]=0"
+    - php: 7.4
+      env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER="max[self]=0" TEST_GROUP=canFail
+    - php: nightly
+      env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER="max[self]=0" TEST_GROUP=canFail
+    - php: 7.3
+      env: STABILITY="dev" TEST_GROUP=canFail
   allow_failures:
-    - env: STABILITY="dev"
+    - env: TEST_GROUP=canFail
+    - php: nightly
 before_install:
   - if ! [ -z "$STABILITY" ]; then composer config minimum-stability ${STABILITY}; fi;
   - if ! [ -v "$DEPENDENCIES" ]; then composer require --no-update ${DEPENDENCIES};
     fi;
 install:
-  - if [[ "$COMPOSER_FLAGS" == *"--prefer-lowest"* ]]; then composer update --prefer-dist
-    --no-interaction --prefer-stable --quiet; fi
   - composer update ${COMPOSER_FLAGS} --prefer-dist --no-interaction
 script:
   - composer validate --strict --no-check-lock
@@ -34,6 +35,6 @@ script:
   - composer phpunit
   - composer infection
   - composer clover
-  #- composer bccheck
+  - composer bccheck
 after_success:
   - bash <(curl -s https://codecov.io/bash)
