@@ -2,7 +2,7 @@
 
 {% block toolbar %}
     {% set icon %}
-        <span class="icon"><img src="" alt="C"/></span>
+        <span class="icon">{{ collector.bundles | length }}</span>
     {% endset %}
 
     {% set text %}
@@ -26,8 +26,14 @@
 {% endblock %}
 
 {% block panel %}
-    Config UI
     {%- for bundle in collector.bundles -%}
-        {{ bundle }}
+        <div>
+            <div>{{ bundle.name }}</div>
+            <div>{{ bundle.namespace }}</div>
+            <div>{{ bundle.path }}</div>
+            <div>{{ bundle.defaultConfiguration | join }}</div>
+            <div>{{ bundle.currentConfiguration | join }}</div>
+        </div>
+        <hr>
     {%- endfor -%}
 {% endblock %}

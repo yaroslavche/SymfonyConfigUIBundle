@@ -3,5 +3,16 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://symfony.com/schema/routing
         https://symfony.com/schema/routing/routing-1.0.xsd">
-    <route id="yaroslavche_config_ui.dashboard" path="/dashboard" controller="yaroslavche_config_ui.controller.dashboard::__invoke"/>
+    <route id="yaroslavche_config_ui.api.bundles" path="/bundles"
+           controller="yaroslavche_config_ui.controller.api::getBundles"/>
+    <route id="yaroslavche_config_ui.api.bundle" path="/bundle/{name}"
+           controller="yaroslavche_config_ui.controller.api::getBundle"/>
+    <route id="yaroslavche_config_ui.api.bundle_definitions" path="/bundle/{name}/definitions"
+           controller="yaroslavche_config_ui.controller.api::getBundleDefinitions"/>
+    <route id="yaroslavche_config_ui.api.bundle_default" path="/bundle/{name}/default"
+           controller="yaroslavche_config_ui.controller.api::getBundleDefaultConfiguration"/>
+    <route id="yaroslavche_config_ui.api.bundle_current" path="/bundle/{name}/current"
+           controller="yaroslavche_config_ui.controller.api::getBundleCurrentConfiguration"/>
+    <route id="yaroslavche_config_ui.api.bundle_set" path="/bundle/{name}/set"
+           controller="yaroslavche_config_ui.controller.api::setBundleCurrentConfiguration"/>
 </routes>

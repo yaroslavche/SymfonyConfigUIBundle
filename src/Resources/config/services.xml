@@ -15,8 +15,8 @@
                  alias="yaroslavche_config_ui.service.config" public="false"/>
 
         <!-- controller -->
-        <service id="yaroslavche_config_ui.controller.dashboard"
-                 class="Yaroslavche\ConfigUIBundle\Controller\DashboardController" public="true">
+        <service id="yaroslavche_config_ui.controller.api"
+                 class="Yaroslavche\ConfigUIBundle\Controller\ApiController" public="true">
             <argument type="service" id="yaroslavche_config_ui.service.config"/>
             <tag name="controller.service_arguments"/>
         </service>
@@ -28,6 +28,11 @@
                  template="@YaroslavcheConfigUI/data_collector.html.twig"
                  id="yaroslavche_config_ui.data_collector.config"
             />
+        </service>
+
+        <!-- normalizer -->
+        <service id="Yaroslavche\ConfigUIBundle\Serializer\BundleConfigNormalizer" public="false">
+            <tag name="serializer.normalizer"/>
         </service>
     </services>
 </container>

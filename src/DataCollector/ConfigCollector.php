@@ -3,6 +3,7 @@
 namespace Yaroslavche\ConfigUIBundle\DataCollector;
 
 use Exception;
+use ReflectionException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\DataCollector\DataCollector;
@@ -11,9 +12,8 @@ use Yaroslavche\ConfigUIBundle\Service\Config;
 class ConfigCollector extends DataCollector
 {
     const DATA_COLLECTOR_NAME = 'yaroslavche_config_ui.data_collector.config';
-    /**
-     * @var Config
-     */
+
+    /** @var Config $config */
     private $config;
 
     /**
@@ -34,8 +34,25 @@ class ConfigCollector extends DataCollector
      */
     public function collect(Request $request, Response $response, Exception $exception = null)
     {
+        $bundles = [];
+        try {
+            $bundleConfigs = $this->config->getBundleConfigs(true);
+            foreach ($bundleConfigs as $name => $bundleConfig) {
+                $bundles[$name] = [
+                    'name' => $bundleConfig->getName(),
+                    'namespace' => $bundleConfig->getNamespace(),
+                    'path' => $bundleConfig->getPath(),
+                    /** Serialization of 'Closure' is not allowed */
+//                    'definitions' => $bundleConfig->getDefinitions(),
+                    'defaultConfiguration' => $bundleConfig->getDefaultConfiguration(),
+                    'currentConfiguration' => $bundleConfig->getCurrentConfiguration(),
+                ];
+            }
+        } catch (ReflectionException $exception) {
+            // @ignoreException
+        }
         $this->data = [
-            'bundles' => []
+            'bundles' => $bundles
         ];
     }
 
