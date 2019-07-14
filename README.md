@@ -16,6 +16,47 @@ yaroslavche_config_ui:
     prefix: '/config'
 ```
 
+And config*:
+```yaml
+# config/packages/yaroslavche_config_ui.yaml
+yaroslavche_config_ui:
+  definition_fields:
+    name: true
+    normalization: false
+    validation: false
+    defaultValue: true
+    default: true
+    required: true
+    deprecationMessage: true
+    merge: false
+    allowEmptyValue: true
+    nullEquivalent: false
+    trueEquivalent: false
+    falseEquivalent: false
+    pathSeparator: false
+    parent: false
+    attributes: true
+    performDeepMerging: false
+    ignoreExtraKeys: false
+    removeExtraKeys: false
+    children: true
+    prototype: true
+    atLeastOne: true
+    allowNewKeys: false
+    key: false
+    removeKeyItem: false
+    addDefaults: false
+    addDefaultChildren: false
+    nodeBuilder: false
+    normalizeKeys: false
+    min: false
+    max: false
+    values: false
+    type: true
+```
+`*` I suppose it will be default in future. `definition_fields` - private properties of `NodeDefinition` (depends on NodeDefinition class). Boolean: include in definitions array or not.
+
+
 Look at:
 [http://localhost:8000/config/dashboard](http://localhost:8000/config/dashboard)
 
