@@ -58,7 +58,41 @@ yaroslavche_config_ui:
 
 
 Look at:
-[http://localhost:8000/config/dashboard](http://localhost:8000/config/dashboard)
+
+[https://localhost:8000/config/bundles](https://localhost:8000/config/bundles)
+```js
+const response = {
+  "status": "success",
+  "bundles": {
+    // ...
+  }
+}
+```
+[https://localhost:8000/config/bundle/FrameworkBundle](https://localhost:8000/config/bundle/FrameworkBundle)
+```js
+const response = {
+  "status": "success",
+  "bundle": {
+    "name": "FrameworkBundle",
+    "namespace": "Symfony\\Bundle\\FrameworkBundle",
+    "path": "\/vendor\/symfony\/framework-bundle",
+    "definitions": {
+      "secret": {
+        "name": "secret",
+        "defaultValue": null,
+        "default": false,
+        "required": false,
+        "deprecationMessage": null,
+        "allowEmptyValue": true,
+        "attributes": [],
+        "type": "scalar"
+      },
+      // ...
+    },
+    // ...
+  }
+}
+```
 
 # Dev tools
 ```bash

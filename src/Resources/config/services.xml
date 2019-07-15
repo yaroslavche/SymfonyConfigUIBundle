@@ -8,9 +8,9 @@
         <!-- config service -->
         <service id="yaroslavche_config_ui.service.config"
                  class="Yaroslavche\ConfigUIBundle\Service\Config" public="true">
-            <argument id="$kernelProjectPath"/>
             <argument id="$kernelBundlesMetadata"/>
             <argument id="$definitionFields"/>
+            <argument id="$kernelProjectDir"/>
         </service>
         <service id="Yaroslavche\ConfigUIBundle\Service\Config"
                  alias="yaroslavche_config_ui.service.config" public="false"/>
@@ -23,7 +23,7 @@
         </service>
 
         <!-- profiler data collector service -->
-        <service id="Yaroslavche\ConfigUIBundle\DataCollector\ConfigCollector" public="false">
+        <service id="Yaroslavche\ConfigUIBundle\DataCollector\ConfigUIDataCollector" public="false">
             <argument type="service" id="yaroslavche_config_ui.service.config"/>
             <tag name="data_collector"
                  template="@YaroslavcheConfigUI/data_collector.html.twig"

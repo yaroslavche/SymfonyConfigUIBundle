@@ -2,7 +2,6 @@
 
 namespace Yaroslavche\ConfigUIBundle\Controller;
 
-use Exception;
 use ReflectionException;
 use stdClass;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -56,11 +55,14 @@ class ApiController extends AbstractController
     {
         try {
             $bundleConfig = $this->configService->getBundleConfig($name);
-            $bundle = $this->getBundleConfigArray($bundleConfig);
-            return $this->successResponse(['bundle' => $bundle]);
         } catch (ReflectionException $exception) {
             return $this->errorResponse($exception->getMessage());
         }
+        if (!$bundleConfig instanceof BundleConfig) {
+            return $this->errorResponse(sprintf('Bundle "%s" not found', $name));
+        }
+        $bundle = $this->getBundleConfigArray($bundleConfig);
+        return $this->successResponse(['bundle' => $bundle]);
     }
 
     /**
@@ -121,11 +123,8 @@ class ApiController extends AbstractController
      * @param BundleConfig $bundleConfig
      * @return array[]
      */
-    private function getBundleConfigArray(?BundleConfig $bundleConfig): array
+    private function getBundleConfigArray(BundleConfig $bundleConfig): array
     {
-        if (null === $bundleConfig) {
-            return [];
-        }
         $bundleConfigJSON = $this->serializer->serialize($bundleConfig, 'json');
         $bundleConfigArray = json_decode($bundleConfigJSON, true);
         return $bundleConfigArray;

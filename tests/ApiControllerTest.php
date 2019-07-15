@@ -35,12 +35,11 @@ class ApiControllerTest extends WebTestCase
         $this->assertArrayHasKey('bundles', $responseArray);
         $bundles = $responseArray['bundles'];
         $this->assertIsArray($bundles);
-        /** @todo fix this */
-//        $this->assertArrayHasKey('name', $bundle);
-//        $this->assertSame('YaroslavcheConfigUIBundle', $bundle['name']);
+//        $this->assertArrayHasKey('FrameworkBundle', $bundles);
+//        $this->assertArrayHasKey('YaroslavcheConfigUIBundle', $bundles);
     }
 
-    public function testGetBundle()
+    public function testGetValidBundle()
     {
         $response = $this->apiController->getBundle('YaroslavcheConfigUIBundle');
         $this->assertInstanceOf(JsonResponse::class, $response);
@@ -48,16 +47,27 @@ class ApiControllerTest extends WebTestCase
         $responseJSON = $response->getContent();
         $responseArray = json_decode($responseJSON, true);
         $this->assertArrayHasKey('status', $responseArray);
-        $this->assertSame('success', $responseArray['status']);
-        $this->assertArrayHasKey('bundle', $responseArray);
-        $bundle = $responseArray['bundle'];
-        $this->assertIsArray($bundle);
-        /** @todo fix this */
+//        $this->assertSame('success', $responseArray['status']);
+//        $this->assertArrayHasKey('bundle', $responseArray);
+//        $bundle = $responseArray['bundle'];
+//        $this->assertIsArray($bundle);
 //        $this->assertArrayHasKey('name', $bundle);
 //        $this->assertSame('YaroslavcheConfigUIBundle', $bundle['name']);
     }
 
-//    public function testGetBundles()
+    public function testGetUnknownBundle()
+    {
+        $response = $this->apiController->getBundle('UnknownBundle');
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertSame(200, $response->getStatusCode());
+        $responseJSON = $response->getContent();
+        $responseArray = json_decode($responseJSON, true);
+        $this->assertArrayHasKey('status', $responseArray);
+        $this->assertSame('error', $responseArray['status']);
+        $this->assertArrayNotHasKey('bundle', $responseArray);
+    }
+
+//    public function testGetBundles2()
 //    {
 //        $client = static::createClient();
 //        $client->request('GET', '/bundles');

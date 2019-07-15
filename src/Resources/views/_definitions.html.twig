@@ -1,0 +1,23 @@
+{% for definition in definitions %}
+    <li>
+        {{ definition.name }}
+        {% if definition.children is defined %}
+            <ul>
+                {% include "@YaroslavcheConfigUI/_definitions.html.twig" with {'definitions': definition.children} %}
+            </ul>
+        {% endif %}
+    </li>
+{% endfor %}
+
+{% macro definitionNode(definitions) %}
+    {% for definition in definitions %}
+        <li>
+            {{ definition.name }}
+            {% if definition.children is defined %}
+                <ul>
+                    {{ _self.definitionNode(definition.children) }}
+                </ul>
+            {% endif %}
+        </li>
+    {% endfor %}
+{% endmacro %}

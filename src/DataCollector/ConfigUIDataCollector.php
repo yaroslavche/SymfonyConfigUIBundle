@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\DataCollector\DataCollector;
 use Yaroslavche\ConfigUIBundle\Service\Config;
 
-class ConfigCollector extends DataCollector
+class ConfigUIDataCollector extends DataCollector
 {
     const DATA_COLLECTOR_NAME = 'yaroslavche_config_ui.data_collector.config';
 
@@ -51,8 +51,9 @@ class ConfigCollector extends DataCollector
         } catch (ReflectionException $exception) {
             // @ignoreException
         }
+
         $this->data = [
-            'bundles' => $bundles
+            'bundles' => $bundles,
         ];
     }
 

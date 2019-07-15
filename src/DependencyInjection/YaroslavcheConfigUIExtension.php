@@ -2,6 +2,7 @@
 
 namespace Yaroslavche\ConfigUIBundle\DependencyInjection;
 
+use Exception;
 use RuntimeException;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -17,8 +18,7 @@ class YaroslavcheConfigUIExtension extends Extension
      *
      * @param array $configs
      * @param ContainerBuilder $container
-     * @throws \Exception When loading config failed
-     * @throws \InvalidArgumentException When provided tag is not defined in this extension
+     * @throws Exception
      */
     public function load(array $configs, ContainerBuilder $container)
     {
@@ -73,9 +73,9 @@ class YaroslavcheConfigUIExtension extends Extension
         $kernelProjectDir = $container->getParameter('kernel.project_dir');
 
         $configServiceDefinition = $container->getDefinition('yaroslavche_config_ui.service.config');
-        $configServiceDefinition->setArgument('$kernelProjectDir', $kernelProjectDir);
         $configServiceDefinition->setArgument('$kernelBundlesMetadata', $kernelBundlesMetadata);
         $configServiceDefinition->setArgument('$definitionFields', $config['definition_fields']);
+        $configServiceDefinition->setArgument('$kernelProjectDir', $kernelProjectDir);
     }
 
     /**

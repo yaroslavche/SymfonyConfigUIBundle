@@ -42,11 +42,11 @@ class Config
 
     /**
      * Config constructor.
-     * @param string $kernelProjectDir
      * @param array[] $kernelBundlesMetadata
      * @param bool[] $definitionFields
+     * @param string $kernelProjectDir
      */
-    public function __construct(string $kernelProjectDir, array $kernelBundlesMetadata, array $definitionFields)
+    public function __construct(array $kernelBundlesMetadata, array $definitionFields, string $kernelProjectDir)
     {
         $this->kernelProjectDir = $kernelProjectDir;
         $this->filesystem = new Filesystem();

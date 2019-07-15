@@ -31,6 +31,9 @@
             <div>{{ bundle.name }}</div>
             <div>{{ bundle.namespace }}</div>
             <div>{{ bundle.path }}</div>
+            {% if bundle.definitions is defined %}
+                {% include "@YaroslavcheConfigUI/_definitions.html.twig" with {'definitions': bundle.definitions} only %}
+            {% endif %}
             <div>{{ bundle.defaultConfiguration | join }}</div>
             <div>{{ bundle.currentConfiguration | join }}</div>
         </div>
