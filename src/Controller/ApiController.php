@@ -56,10 +56,11 @@ class ApiController extends AbstractController
     {
         try {
             $bundleConfig = $this->configService->getBundleConfig($name);
+            $bundle = $this->getBundleConfigArray($bundleConfig);
+            return $this->successResponse(['bundle' => $bundle]);
         } catch (ReflectionException $exception) {
             return $this->errorResponse($exception->getMessage());
         }
-        return $this->successResponse($this->getBundleConfigArray($bundleConfig));
     }
 
     /**
@@ -120,8 +121,11 @@ class ApiController extends AbstractController
      * @param BundleConfig $bundleConfig
      * @return array[]
      */
-    private function getBundleConfigArray(BundleConfig $bundleConfig): array
+    private function getBundleConfigArray(?BundleConfig $bundleConfig): array
     {
+        if (null === $bundleConfig) {
+            return [];
+        }
         $bundleConfigJSON = $this->serializer->serialize($bundleConfig, 'json');
         $bundleConfigArray = json_decode($bundleConfigJSON, true);
         return $bundleConfigArray;

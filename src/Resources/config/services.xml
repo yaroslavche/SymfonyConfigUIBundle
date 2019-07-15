@@ -8,6 +8,7 @@
         <!-- config service -->
         <service id="yaroslavche_config_ui.service.config"
                  class="Yaroslavche\ConfigUIBundle\Service\Config" public="true">
+            <argument id="$kernelProjectPath"/>
             <argument id="$kernelBundlesMetadata"/>
             <argument id="$definitionFields"/>
         </service>

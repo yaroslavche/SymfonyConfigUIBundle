@@ -47,6 +47,9 @@ class FunctionalTest extends TestCase
         $definitionFieldsDefinition = $definitions['definition_fields'];
 
         /** yaroslavche_config_ui.definitions_fields */
+        $this->assertSame(11, count($definitionFieldsDefinition));
+        $this->assertArrayHasKey('name', $definitionFieldsDefinition);
+        $this->assertSame('definition_fields', $definitionFieldsDefinition['name']);
         $this->assertArrayHasKey('type', $definitionFieldsDefinition);
         $this->assertSame('array', $definitionFieldsDefinition['type']);
         $this->assertArrayHasKey('prototype', $definitionFieldsDefinition);
@@ -57,8 +60,13 @@ class FunctionalTest extends TestCase
         $this->assertIsArray($definitionFieldsChildrenDefinition);
         /** yaroslavche_config_ui.definitions_fields.children.default */
         $this->assertArrayHasKey('', $definitionFieldsChildrenDefinition);
-        $this->assertIsArray($definitionFieldsChildrenDefinition['']);
-        $this->assertSame('boolean', $definitionFieldsChildrenDefinition['']['type']);
+        $definitionFieldsChildrenDefaultDefinition = $definitionFieldsChildrenDefinition[''];
+        $this->assertIsArray($definitionFieldsChildrenDefaultDefinition);
+        $this->assertSame(8, count($definitionFieldsChildrenDefaultDefinition));
+        $this->assertArrayHasKey('name', $definitionFieldsChildrenDefaultDefinition);
+        $this->assertNull($definitionFieldsChildrenDefaultDefinition['name']);
+        $this->assertArrayHasKey('type', $definitionFieldsChildrenDefaultDefinition);
+        $this->assertSame('boolean', $definitionFieldsChildrenDefaultDefinition['type']);
 
         $definitionsFieldsConfig = $this->kernel->getBundleConfig()['definition_fields'];
         foreach ($definitionFieldsDefinition as $field => $value) {

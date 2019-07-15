@@ -15,48 +15,14 @@ class Kernel extends SymfonyKernel
 {
     use MicroKernelTrait;
 
-    /** @var array $bundleConfig configuration for translation bundle */
-    private $bundleConfig;
-
-    public function __construct(?array $bundleConfig = null)
+    /**
+     * Kernel constructor.
+     * @param string $env
+     * @param bool $debug
+     */
+    public function __construct(string $env = 'test', bool $debug = true)
     {
-        $this->bundleConfig = $bundleConfig ?? [
-                'definition_fields' => [
-                    'name' => true,
-                    'normalization' => false,
-                    'validation' => false,
-                    'defaultValue' => true,
-                    'default' => true,
-                    'required' => true,
-                    'deprecationMessage' => true,
-                    'merge' => false,
-                    'allowEmptyValue' => true,
-                    'nullEquivalent' => false,
-                    'trueEquivalent' => false,
-                    'falseEquivalent' => false,
-                    'pathSeparator' => false,
-                    'parent' => false,
-                    'attributes' => true,
-                    'performDeepMerging' => false,
-                    'ignoreExtraKeys' => false,
-                    'removeExtraKeys' => false,
-                    'children' => true,
-                    'prototype' => true,
-                    'atLeastOne' => true,
-                    'allowNewKeys' => false,
-                    'key' => false,
-                    'removeKeyItem' => false,
-                    'addDefaults' => false,
-                    'addDefaultChildren' => false,
-                    'nodeBuilder' => false,
-                    'normalizeKeys' => false,
-                    'min' => false,
-                    'max' => false,
-                    'values' => false,
-                    'type' => true,
-                ]
-            ];
-        parent::__construct('test', true);
+        parent::__construct($env, $debug);
     }
 
     public function registerBundles()
@@ -77,7 +43,42 @@ class Kernel extends SymfonyKernel
      */
     public function getBundleConfig(): array
     {
-        return $this->bundleConfig;
+        return [
+            'definition_fields' => [
+                'name' => true,
+                'normalization' => false,
+                'validation' => false,
+                'defaultValue' => true,
+                'default' => true,
+                'required' => true,
+                'deprecationMessage' => true,
+                'merge' => false,
+                'allowEmptyValue' => true,
+                'nullEquivalent' => false,
+                'trueEquivalent' => false,
+                'falseEquivalent' => false,
+                'pathSeparator' => false,
+                'parent' => false,
+                'attributes' => true,
+                'performDeepMerging' => false,
+                'ignoreExtraKeys' => false,
+                'removeExtraKeys' => false,
+                'children' => true,
+                'prototype' => true,
+                'atLeastOne' => true,
+                'allowNewKeys' => false,
+                'key' => false,
+                'removeKeyItem' => false,
+                'addDefaults' => false,
+                'addDefaultChildren' => false,
+                'nodeBuilder' => false,
+                'normalizeKeys' => false,
+                'min' => false,
+                'max' => false,
+                'values' => false,
+                'type' => true,
+            ]
+        ];
     }
 
     /**
@@ -98,6 +99,6 @@ class Kernel extends SymfonyKernel
         $c->loadFromExtension('framework', [
             'secret' => 'test'
         ]);
-        $c->loadFromExtension('yaroslavche_config_ui', $this->bundleConfig);
+        $c->loadFromExtension('yaroslavche_config_ui', $this->getBundleConfig());
     }
 }

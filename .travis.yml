@@ -30,6 +30,6 @@ script:
   - composer phpunit
   - composer infection
   - composer clover
-  - composer bccheck
+#  - composer bccheck
 after_success:
   - bash <(curl -s https://codecov.io/bash)

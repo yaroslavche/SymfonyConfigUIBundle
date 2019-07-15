@@ -33,6 +33,8 @@ class Config
 
     /** @var Filesystem $filesystem */
     private $filesystem;
+    /** @var string $kernelProjectPath */
+    private $kernelProjectDir;
     /** @var BundleConfig[] $bundleConfigs */
     private $bundleConfigs;
     /** @var bool[] $definitionFields */
@@ -40,18 +42,24 @@ class Config
 
     /**
      * Config constructor.
+     * @param string $kernelProjectDir
      * @param array[] $kernelBundlesMetadata
      * @param bool[] $definitionFields
      */
-    public function __construct(array $kernelBundlesMetadata, array $definitionFields)
+    public function __construct(string $kernelProjectDir, array $kernelBundlesMetadata, array $definitionFields)
     {
+        $this->kernelProjectDir = $kernelProjectDir;
         $this->filesystem = new Filesystem();
         $this->definitionFields = $definitionFields;
+
         foreach ($kernelBundlesMetadata as $name => $metadata) {
             $namespace = $metadata['namespace'];
             $path = $metadata['path'];
-            if (empty($namespace) || empty($path)) {
-                throw new LogicException('Missed expected bundle metadata');
+            if (empty($namespace)) {
+                throw new LogicException('Namespace must be set in bundle metadata');
+            }
+            if (empty($path)) {
+                throw new LogicException('Path must be set in bundle metadata');
             }
             $bundleConfig = new BundleConfig();
             $bundleConfig
@@ -124,6 +132,15 @@ class Config
     private function loadCurrentConfiguration(BundleConfig $bundleConfig): void
     {
         $configuration = [];
+        /** @todo need finder for search different formats [yaml, xml, php] */
+        $fileName = sprintf(
+            '%s/config/packages/%s.yaml',
+            $this->kernelProjectDir,
+            $bundleConfig->getTree()->getName()
+        );
+        if ($this->filesystem->exists($fileName)) {
+        } else {
+        }
         /** @todo implement */
         $bundleConfig->setCurrentConfiguration($configuration);
     }

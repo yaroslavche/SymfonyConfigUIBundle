@@ -70,7 +70,10 @@ class YaroslavcheConfigUIExtension extends Extension
         $configuration = $this->getConfiguration($configs, $container);
         $config = $this->processConfiguration($configuration, $configs);
 
+        $kernelProjectDir = $container->getParameter('kernel.project_dir');
+
         $configServiceDefinition = $container->getDefinition('yaroslavche_config_ui.service.config');
+        $configServiceDefinition->setArgument('$kernelProjectDir', $kernelProjectDir);
         $configServiceDefinition->setArgument('$kernelBundlesMetadata', $kernelBundlesMetadata);
         $configServiceDefinition->setArgument('$definitionFields', $config['definition_fields']);
     }
